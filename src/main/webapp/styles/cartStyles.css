@@ -1,0 +1,161 @@
+/* cartStyles.css */
+:root {
+    --primary-color: #6366f1;
+    --primary-text: #1f2937;
+    --secondary-text: #6b7280;
+    --border-color: #e5e7eb;
+    --card-bg: #ffffff;
+    --hover-bg: #f9fafb;
+}
+
+body {
+    background-color: #f3f4f6;
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+.cart-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 2rem;
+}
+
+/* Cart Item Styles */
+.cart-item {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+}
+
+.cart-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.product-image {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+/* Quantity Control */
+.quantity-control {
+    width: 120px;
+}
+
+.quantity-control .btn {
+    padding: 0.375rem 0.75rem;
+    border-color: var(--border-color);
+}
+
+.quantity-control .form-control {
+    border-color: var(--border-color);
+    text-align: center;
+}
+
+.quantity-control .form-control:focus {
+    box-shadow: none;
+    border-color: var(--primary-color);
+}
+
+/* Summary Card */
+.summary-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: none;
+}
+
+.summary-card .card-body {
+    padding: 1.5rem;
+}
+
+.summary-card .card-title {
+    color: var(--primary-text);
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+}
+
+/* Button Styles */
+.btn {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #4f46e5;
+    transform: translateY(-1px);
+}
+
+.btn-outline-primary {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-outline-danger {
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+.btn-outline-danger:hover {
+    background-color: #ef4444;
+    color: white;
+}
+
+/* Summary Details */
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    color: var(--secondary-text);
+}
+
+.summary-total {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+    font-weight: 600;
+    color: var(--primary-text);
+}
+
+hr {
+    margin: 1rem 0;
+    border-color: var(--border-color);
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .summary-card {
+        margin-top: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .cart-container {
+        padding: 1rem;
+    }
+
+    .product-image {
+        width: 80px;
+        height: 80px;
+    }
+
+    .quantity-control {
+        width: 100px;
+    }
+}

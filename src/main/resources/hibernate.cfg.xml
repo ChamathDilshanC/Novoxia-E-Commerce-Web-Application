@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD//EN"
+        "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+  <session-factory>
+    <!-- Hibernate Properties -->
+    <property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
+    <property name="hibernate.show_sql">true</property>
+    <property name="hibernate.format_sql">true</property>
+    <property name="hibernate.hbm2ddl.auto">update</property>
+
+    <!-- Entity mappings -->
+    <mapping class="lk.ijse.entity.Cart"/>
+    <mapping class="lk.ijse.entity.Category"/>
+    <mapping class="lk.ijse.entity.Order"/>
+    <mapping class="lk.ijse.entity.OrderDetail"/>
+    <mapping class="lk.ijse.entity.Product"/>
+    <mapping class="lk.ijse.entity.User"/>
+  </session-factory>
+</hibernate-configuration>
