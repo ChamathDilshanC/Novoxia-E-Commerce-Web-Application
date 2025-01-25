@@ -27,227 +27,263 @@
   <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="styles/dashboard.css">
+  <link rel="stylesheet" href="styles/customerReview.css">
 </head>
+<style>
+  body {
+    background-color: #f8f9fa;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    padding: 1rem 2rem 0 2rem;
+  }
+  .image-container-wrapper {
+    margin-top: 1rem;
+    margin-bottom: 2rem;
+    padding: 0rem 15rem;
+  }
 
+  .image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-gap: 1.5rem;
+  }
+
+  .image-item {
+    position: relative;
+    overflow: hidden;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    height:450px;
+  }
+
+  .image-item img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+
+  .image-item:hover img {
+    transform: scale(1.05);
+  }
+
+  .image-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 1.5rem;
+    color: #fff;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .image-item:hover .image-overlay {
+    opacity: 1;
+  }
+
+  .image-overlay h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .image-overlay p {
+    font-size: 1rem;
+  }
+
+  .image-overlay a {
+    display: inline-block;
+    margin-top: 1rem;
+    background-color: #fff;
+    color: #000;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+  }
+
+  .image-overlay a:hover {
+    background-color: #f1f1f1;
+  }
+  .testimonials-section {
+    background: #fff;
+    border-radius: 25px;
+  }
+
+  .testimonial-card {
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+  }
+
+  .testimonial-card:hover {
+    transform: translateY(-5px);
+  }
+
+  .rating {
+    font-size: 20px;
+    letter-spacing: 2px;
+  }
+
+  .testimony {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #333;
+  }
+
+  .client-name {
+    font-weight: 600;
+    color: #000;
+  }
+
+  .client-position {
+    font-size: 0.9rem;
+  }
+  .header-section {
+    background: linear-gradient(135deg, #2105df 0%, #ffffff 100%);
+    color: white;
+    padding: 2rem 5rem 2rem 5rem;
+    margin-top: 1rem;
+    margin-bottom: 2rem;
+    border-radius: 15px;
+  }
+
+</style>
 <body>
 <!-- Top Navigation -->
 <jsp:include page="components/topnav.jsp" />
 
-<div class="app-container">
-  <div class="row g-4">
-    <div class="col-lg-3">
-      <div class="steps-nav">
-        <div class="step-item active">
-          <div class="step-number">1</div>
-          <div class="step-content">
-            <h3>Overview</h3>
-            <p>View dashboard stats</p>
-          </div>
-        </div>
-
-        <div class="step-item">
-          <div class="step-number">2</div>
-          <div class="step-content">
-            <h3>Products</h3>
-            <p>Manage your products</p>
-          </div>
-        </div>
-
-        <div class="step-item">
-          <div class="step-number">3</div>
-          <div class="step-content">
-            <h3>Categories</h3>
-            <p>Organize inventory</p>
-          </div>
-        </div>
-
-        <div class="step-item">
-          <div class="step-number">4</div>
-          <div class="step-content">
-            <h3>Orders</h3>
-            <p>Process customer orders</p>
-          </div>
-        </div>
-
-        <% if ("ADMIN".equals(role)) { %>
-        <div class="step-item">
-          <div class="step-number">5</div>
-          <div class="step-content">
-            <h3>Users</h3>
-            <p>Manage customer accounts</p>
-          </div>
-        </div>
-        <% } %>
+<div class="header-section">
+  <div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h1 class="m-0 mb-2">Dashboard</h1>
+        <p class="m-0 text-white-50">Welcome User Wish You A Happy Day ❤️🫰</p>
       </div>
-      <div class="step-item">
-        <div class="step-content">
-          <form id="logoutForm" action="${pageContext.request.contextPath}/index.jsp" method="post">
-            <button type="submit" class="btn btn-danger w-100">Log Out</button>
-          </form>
-          <p class="text-center mt-2">End your session</p>
-        </div>
+    </div>
+  </div>
+</div>
+<div class="image-container-wrapper">
+  <div class="image-grid">
+    <div class="image-item">
+      <img src="assets/dashboard/img_4.png" alt="Product 1" class="w-full h-auto object-cover rounded-lg shadow-md">
+      <div class="image-overlay">
+        <h3 class="text-xl font-semibold text-white mb-2">New Arrivals</h3>
+        <p class="text-sm text-white">Check out our latest collection</p>
+        <a href="#" class="mt-4 inline-block bg-white text-black py-2 px-4 rounded-full font-semibold hover:bg-gray-200 transition duration-300">Shop Now</a>
       </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="col-lg-9">
-      <div class="row g-4">
-        <div class="col-sm-6 col-xl-3">
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="bi bi-box-seam text-primary"></i>
-            </div>
-            <div class="feature-title">Total Products</div>
-            <div class="feature-value">485</div>
-            <div class="feature-description">12 added today</div>
+    <div class="image-item">
+      <img src="assets/dashboard/img.png" alt="Product 2" class="w-full h-auto object-cover rounded-lg shadow-md">
+      <div class="image-overlay">
+        <h3 class="text-xl font-semibold text-white mb-2">Summer Sale</h3>
+        <p class="text-sm text-white">Up to 50% off select items</p>
+        <a href="#" class="mt-4 inline-block bg-white text-black py-2 px-4 rounded-full font-semibold hover:bg-gray-200 transition duration-300">Shop Sale</a>
+      </div>
+    </div>
+
+    <div class="image-item">
+      <img src="assets/dashboard/img_7.png" alt="Product 3" class="w-full h-auto object-cover rounded-lg shadow-md">
+      <div class="image-overlay">
+        <h3 class="text-xl font-semibold text-white mb-2">Trending Now</h3>
+        <p class="text-sm text-white">Discover the hottest styles</p>
+        <a href="#" class="mt-4 inline-block bg-white text-black py-2 px-4 rounded-full font-semibold hover:bg-gray-200 transition duration-300">Explore Trends</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="testimonials-section py-5">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="testimonial-card text-center">
+          <img src="assets/logo/img.png" alt="CreativEdge" class="mb-3" height="52">
+          <div class="rating mb-3">
+            <i class="bi bi-star-fill text-warning"></i>
+            <i class="bi bi-star-fill text-warning"></i>
+            <i class="bi bi-star-fill text-warning"></i>
+            <i class="bi bi-star-fill text-warning"></i>
+            <i class="bi bi-star-fill text-warning"></i>
           </div>
+          <p class="testimony mb-4">"The creativity and AI expertise from Automatix set a new benchmark for our industry. Highly recommended!"</p>
+          <h5 class="client-name mb-1">Agus Blimbing</h5>
+          <p class="client-position text-muted">Tech Manager</p>
         </div>
+      </div>
 
-        <div class="col-sm-6 col-xl-3">
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="bi bi-cart text-success"></i>
-            </div>
-            <div class="feature-title">Active Orders</div>
-            <div class="feature-value">24</div>
-            <div class="feature-description">6 pending delivery</div>
+      <div class="col-md-4">
+        <div class="testimonial-card text-center">
+          <img src="assets/logo/img_1.png" alt="BrightNest" class="mb-3" height="52">
+          <div class="rating mb-3">
+            <i class="bi bi-star-fill text-warning"></i>
+            <i class="bi bi-star-fill text-warning"></i>
+            <i class="bi bi-star-fill text-warning"></i>
+            <i class="bi bi-star-fill text-warning"></i>
+            <i class="bi bi-star-fill text-warning"></i>
           </div>
+          <p class="testimony mb-4">"Automatix's revolutionary AI approach and creative solutions elevated our project. Stellar performance!"</p>
+          <h5 class="client-name mb-1">Steve Kebalen</h5>
+          <p class="client-position text-muted">AI Developer</p>
         </div>
+      </div>
 
-        <div class="col-sm-6 col-xl-3">
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="bi bi-people text-info"></i>
-            </div>
-            <div class="feature-title">Total Users</div>
-            <div class="feature-value">1,284</div>
-            <div class="feature-description">32 new this week</div>
+      <div class="col-md-4">
+        <div class="testimonial-card text-center">
+          <img src="assets/logo/img_2.png" alt="PrimeCore" class="mb-3" height="52">
+          <div class="rating mb-3">
+            <i class="bi bi-star-fill text-warning"></i>
+            <i class="bi bi-star-fill text-warning"></i>
+            <i class="bi bi-star-fill text-warning"></i>
+            <i class="bi bi-star-fill text-warning"></i>
+            <i class="bi bi-star-fill text-warning"></i>
           </div>
-        </div>
-
-        <div class="col-sm-6 col-xl-3">
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="bi bi-currency-dollar text-warning"></i>
-            </div>
-            <div class="feature-title">Revenue</div>
-            <div class="feature-value">$12,845</div>
-            <div class="feature-description">+8% from last month</div>
-          </div>
-        </div>
-
-        <!-- Quick Links -->
-        <div class="col-12">
-          <div class="row g-4">
-            <div class="col-md-3">
-              <a href="products.jsp" class="text-decoration-none">
-                <div class="feature-card quick-link-card">
-                  <div class="d-flex flex-column align-items-center text-center">
-                    <div class="feature-icon mb-3">
-                      <i class="bi bi-box-seam fs-1 text-primary"></i>
-                    </div>
-                    <h5 class="mb-2">Products</h5>
-                    <p class="text-muted mb-0">Manage your product inventory</p>
-                  </div>
-                </div>
-              </a>
-            </div>
-
-            <div class="col-md-3">
-              <a href="categories.jsp" class="text-decoration-none">
-                <div class="feature-card quick-link-card">
-                  <div class="d-flex flex-column align-items-center text-center">
-                    <div class="feature-icon mb-3">
-                      <i class="bi bi-grid fs-1 text-success"></i>
-                    </div>
-                    <h5 class="mb-2">Categories</h5>
-                    <p class="text-muted mb-0">Organize your products</p>
-                  </div>
-                </div>
-              </a>
-            </div>
-
-            <div class="col-md-3">
-              <a href="view/orders.jsp" class="text-decoration-none">
-                <div class="feature-card quick-link-card">
-                  <div class="d-flex flex-column align-items-center text-center">
-                    <div class="feature-icon mb-3">
-                      <i class="bi bi-cart-check fs-1 text-info"></i>
-                    </div>
-                    <h5 class="mb-2">Orders</h5>
-                    <p class="text-muted mb-0">Track customer orders</p>
-                  </div>
-                </div>
-              </a>
-            </div>
-
-            <% if ("ADMIN".equals(role)) { %>
-            <div class="col-md-3">
-              <a href="user" class="text-decoration-none">
-                <div class="feature-card quick-link-card">
-                  <div class="d-flex flex-column align-items-center text-center">
-                    <div class="feature-icon mb-3">
-                      <i class="bi bi-people fs-1 text-warning"></i>
-                    </div>
-                    <h5 class="mb-2">Users</h5>
-                    <p class="text-muted mb-0">Manage accounts</p>
-                  </div>
-                </div>
-              </a>
-            </div>
-            <% } %>
-          </div>
-        </div>
-
-        <div class="col-12">
-          <div class="feature-card">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-              <h5 class="mb-0">Recent Orders</h5>
-              <a href="view/orders.jsp" class="btn btn-primary btn-sm">View All</a>
-            </div>
-            <div class="table-responsive">
-              <table class="table">
-                <thead>
-                <tr>
-                  <th>Order ID</th>
-                  <th>Customer</th>
-                  <th>Product</th>
-                  <th>Amount</th>
-                  <th>Date</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr>
-                  <td>#1</td>
-                  <td>
-                    <div class="d-flex align-items-center gap-2">
-                      <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
-                           style="width: 32px; height: 32px;">J</div>
-                      <div>John Doe</div>
-                    </div>
-                  </td>
-                  <td>Product Name</td>
-                  <td>$999</td>
-                  <td>Jan 15, 2024</td>
-                  <td><span class="badge bg-success">Completed</span></td>
-                  <td>
-                    <div class="d-flex gap-2">
-                      <button class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></button>
-                      <button class="btn btn-sm btn-outline-success"><i class="bi bi-check-lg"></i></button>
-                    </div>
-                  </td>
-                </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <p class="testimony mb-4">"The blend of AI and creativity at Automatix transformed our vision into reality. Exceptional support!"</p>
+          <h5 class="client-name mb-1">John Kepanjen</h5>
+          <p class="client-position text-muted">E-Commerce Stacks</p>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<div class="image-container-wrapper">
+  <div class="image-grid">
+    <div class="image-item">
+      <img src="assets/dashboard/img_1.png" alt="Product 1" class="w-full h-auto object-cover rounded-lg shadow-md">
+      <div class="image-overlay">
+        <h3 class="text-xl font-semibold text-white mb-2">New Arrivals</h3>
+        <p class="text-sm text-white">Check out our latest collection</p>
+        <a href="#" class="mt-4 inline-block bg-white text-black py-2 px-4 rounded-full font-semibold hover:bg-gray-200 transition duration-300">Shop Now</a>
+      </div>
+    </div>
+
+    <div class="image-item">
+      <img src="assets/dashboard/img_6.png" alt="Product 2" class="w-full h-auto object-cover rounded-lg shadow-md">
+      <div class="image-overlay">
+        <h3 class="text-xl font-semibold text-white mb-2">Summer Sale</h3>
+        <p class="text-sm text-white">Up to 50% off select items</p>
+        <a href="#" class="mt-4 inline-block bg-white text-black py-2 px-4 rounded-full font-semibold hover:bg-gray-200 transition duration-300">Shop Sale</a>
+      </div>
+    </div>
+
+    <div class="image-item">
+      <img src="assets/dashboard/img_3.png" alt="Product 3" class="w-full h-auto object-cover rounded-lg shadow-md">
+      <div class="image-overlay">
+        <h3 class="text-xl font-semibold text-white mb-2">Trending Now</h3>
+        <p class="text-sm text-white">Discover the hottest styles</p>
+        <a href="#" class="mt-4 inline-block bg-white text-black py-2 px-4 rounded-full font-semibold hover:bg-gray-200 transition duration-300">Explore Trends</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<jsp:include page="components/footer.jsp" />
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

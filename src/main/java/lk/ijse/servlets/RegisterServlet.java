@@ -21,7 +21,6 @@ import java.util.regex.Pattern;
 @WebServlet(name = "RegisterServlet", urlPatterns = "/register")
 public class RegisterServlet extends HttpServlet {
 
-    // Validation patterns
     private static final Pattern NAME_PATTERN = Pattern.compile("^[a-zA-Z\\s]{2,50}$");
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@(.+)$");
     private static final Pattern USERNAME_PATTERN = Pattern.compile("^[a-zA-Z0-9_]{4,20}$");
@@ -36,7 +35,6 @@ public class RegisterServlet extends HttpServlet {
         JsonObject jsonResponse = new JsonObject();
 
         try {
-            // Sanitize inputs
             String firstName = sanitizeInput(req.getParameter("firstName"));
             String lastName = sanitizeInput(req.getParameter("lastName"));
             String email = sanitizeInput(req.getParameter("email")).toLowerCase();
@@ -44,7 +42,6 @@ public class RegisterServlet extends HttpServlet {
             String password = req.getParameter("password");
             String confirmPassword = req.getParameter("confirmPassword");
 
-            // Validate inputs
             JsonObject errors = new JsonObject();
 
             if (!isValidName(firstName)) {
@@ -71,7 +68,6 @@ public class RegisterServlet extends HttpServlet {
                 errors.addProperty("confirmPassword", "Passwords don't match");
             }
 
-            // Check for existing user only if no validation errors
             if (errors.size() == 0) {
                 boolean userExists = (Long) session.createQuery(
                                 "SELECT COUNT(u) FROM User u WHERE LOWER(u.username) = :username OR LOWER(u.email) = :email")
@@ -91,7 +87,6 @@ public class RegisterServlet extends HttpServlet {
                 return;
             }
 
-            // Create and save user
             User user = new User();
             user.setFirstName(firstName);
             user.setLastName(lastName);

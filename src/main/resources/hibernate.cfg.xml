@@ -9,6 +9,9 @@
     <property name="hibernate.show_sql">true</property>
     <property name="hibernate.format_sql">true</property>
     <property name="hibernate.hbm2ddl.auto">update</property>
+    <property name="show_sql">true</property>
+    <property name="format_sql">true</property>
+    <property name="hibernate.connection.autocommit">false</property>
 
     <!-- Entity mappings -->
     <mapping class="lk.ijse.entity.Cart"/>
@@ -17,5 +20,6 @@
     <mapping class="lk.ijse.entity.OrderDetail"/>
     <mapping class="lk.ijse.entity.Product"/>
     <mapping class="lk.ijse.entity.User"/>
+
   </session-factory>
 </hibernate-configuration>

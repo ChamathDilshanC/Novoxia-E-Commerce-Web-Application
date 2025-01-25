@@ -240,3 +240,12 @@ body {
     font-size: 3rem;
     margin-bottom: 1rem;
 }
+
+.header-section {
+    background: linear-gradient(135deg, #00a8ff 0%, #3fd3df 100%);
+    color: white;
+    padding: 2rem 5rem 2rem 5rem;
+    margin-top: 1rem;
+    margin-bottom: 2rem;
+    border-radius: 15px;
+}

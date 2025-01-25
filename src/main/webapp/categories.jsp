@@ -17,6 +17,17 @@
 <!-- Top Navigation -->
 <jsp:include page="components/topnav.jsp" />
 
+<div class="header-section">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="m-0 mb-2">Categories</h1>
+                <p class="m-0 text-white-50">Search Your Essential Categories As You Need ❤️🫰</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="dashboard-container">
     <div class="stats-grid">
         <div class="stat-card">

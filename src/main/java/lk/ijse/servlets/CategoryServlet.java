@@ -136,7 +136,6 @@ public class CategoryServlet extends HttpServlet {
 
             session = FactoryConfiguration.getInstance().getSession();
 
-            // Check for duplicate name excluding current category
             Query<Category> query = session.createQuery(
                     "FROM Category WHERE LOWER(name) = LOWER(:name) AND id != :id",
                     Category.class
@@ -192,7 +191,6 @@ public class CategoryServlet extends HttpServlet {
 
             session = FactoryConfiguration.getInstance().getSession();
 
-            // Check if category has products
             Query<?> productQuery = session.createQuery(
                     "SELECT COUNT(p) FROM Product p WHERE p.category.id = :categoryId"
             );

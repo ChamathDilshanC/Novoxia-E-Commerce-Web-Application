@@ -1,6 +1,5 @@
 package lk.ijse.servlets;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -19,361 +18,206 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@WebServlet("/cart/*")
+@WebServlet(name = "CartServlet", urlPatterns = {"/cart/*"})
 public class CartServlet extends HttpServlet {
 
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        String pathInfo = request.getPathInfo();
-
+    private void updateCartCount(HttpSession httpSession, Session session, Integer userId) {
         try {
-            switch (pathInfo) {
-                case "/count":
-                    getCartCount(request, response);
-                    break;
-                case "/items":
-                    getCartItems(request, response);
-                    break;
-                default:
-                    sendErrorResponse(response, "Invalid path", HttpServletResponse.SC_BAD_REQUEST);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            sendErrorResponse(response, "Error processing request: " + e.getMessage());
-        }
-    }
-
-    private void getCartCount(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        HttpSession httpSession = request.getSession();
-        Integer userId = (Integer) httpSession.getAttribute("userId");
-
-        if (userId == null) {
-            sendErrorResponse(response, "User not logged in", HttpServletResponse.SC_UNAUTHORIZED);
-            return;
-        }
-
-        try (Session session = FactoryConfiguration.getInstance().getSession()) {
             Long cartCount = session.createQuery(
-                            "SELECT COUNT(c) FROM Cart c WHERE c.user.id = :userId",
+                            "SELECT COALESCE(SUM(c.quantity), 0) FROM Cart c WHERE c.user.id = :userId",
                             Long.class)
                     .setParameter("userId", userId)
                     .uniqueResult();
 
-            JsonObject json = new JsonObject();
-            json.addProperty("success", true);
-            json.addProperty("count", cartCount);
-
-            response.setContentType("application/json");
-            response.getWriter().write(json.toString());
+            httpSession.setAttribute("cartCount", cartCount.intValue());
         } catch (Exception e) {
             e.printStackTrace();
-            sendErrorResponse(response, "Error getting cart count: " + e.getMessage());
         }
     }
 
-    private void getCartItems(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        HttpSession httpSession = request.getSession();
-        Integer userId = (Integer) httpSession.getAttribute("userId");
-
-        if (userId == null) {
-            sendErrorResponse(response, "User not logged in", HttpServletResponse.SC_UNAUTHORIZED);
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession httpSession = request.getSession(false);
+        if (httpSession == null || httpSession.getAttribute("userId") == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
 
         try (Session session = FactoryConfiguration.getInstance().getSession()) {
+            Integer userId = (Integer) httpSession.getAttribute("userId");
+
+            // Update cart count when viewing cart
+            updateCartCount(httpSession, session, userId);
+
             List<Cart> cartItems = session.createQuery(
                             "FROM Cart c LEFT JOIN FETCH c.product WHERE c.user.id = :userId",
                             Cart.class)
                     .setParameter("userId", userId)
                     .list();
 
-            JsonArray itemsArray = new JsonArray();
-            for (Cart item : cartItems) {
-                JsonObject cartItem = new JsonObject();
-                cartItem.addProperty("id", item.getId());
-                cartItem.addProperty("quantity", item.getQuantity());
-
-                Product product = item.getProduct();
-                JsonObject productObj = new JsonObject();
-                productObj.addProperty("id", product.getId());
-                productObj.addProperty("name", product.getName());
-                productObj.addProperty("price", product.getPrice().toString());
-                productObj.addProperty("stock", product.getStock());
-                if (product.getImagePath() != null) {
-                    productObj.addProperty("imagePath", product.getImagePath());
-                }
-                cartItem.add("product", productObj);
-
-                itemsArray.add(cartItem);
-            }
-
-            JsonObject json = new JsonObject();
-            json.addProperty("success", true);
-            json.add("items", itemsArray);
-
-            response.setContentType("application/json");
-            response.getWriter().write(json.toString());
+            request.setAttribute("cartItems", cartItems);
+            request.getRequestDispatcher("/cart.jsp").forward(request, response);
         } catch (Exception e) {
             e.printStackTrace();
-            sendErrorResponse(response, "Error getting cart items: " + e.getMessage());
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Error loading cart items");
         }
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
         String pathInfo = request.getPathInfo();
+        System.out.println("PathInfo: " + pathInfo); // Debug log
 
         try {
             if ("/add".equals(pathInfo)) {
-                addToCart(request, response);
+                handleAddToCart(request, response);
             } else if ("/update".equals(pathInfo)) {
-                updateCartItem(request, response);
+                handleUpdateCart(request, response);
+            } else if ("/remove".equals(pathInfo)) {
+                handleRemoveFromCart(request, response);
             } else {
-                sendErrorResponse(response, "Invalid path", HttpServletResponse.SC_BAD_REQUEST);
+                throw new ServletException("Invalid path: " + pathInfo);
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            sendErrorResponse(response, "Error processing request: " + e.getMessage());
+            e.printStackTrace(); // Log the full stack trace
+            sendErrorResponse(response, "Server error: " + e.getMessage());
         }
     }
 
-    private void addToCart(HttpServletRequest request, HttpServletResponse response)
+    private void handleAddToCart(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-        HttpSession httpSession = request.getSession();
-        Integer userId = (Integer) httpSession.getAttribute("userId");
+        // Set response type immediately
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
 
-        if (userId == null) {
-            sendErrorResponse(response, "User not logged in", HttpServletResponse.SC_UNAUTHORIZED);
-            return;
-        }
+        HttpSession httpSession = request.getSession(false);
+        Session hibernateSession = null;
+        Transaction transaction = null;
 
-        String productId = request.getParameter("productId");
-        String quantity = request.getParameter("quantity");
+        try {
+            // Validate login state
+            if (httpSession == null || httpSession.getAttribute("userId") == null) {
+                sendErrorResponse(response, "Please login to add items to cart",
+                        HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            }
 
-        if (productId == null || quantity == null) {
-            sendErrorResponse(response, "Missing required parameters", HttpServletResponse.SC_BAD_REQUEST);
-            return;
-        }
-
-        try (Session session = FactoryConfiguration.getInstance().getSession()) {
-            Transaction transaction = session.beginTransaction();
+            // Get required parameters
+            Integer userId = (Integer) httpSession.getAttribute("userId");
+            Integer productId;
+            Integer quantity;
 
             try {
-                Product product = session.get(Product.class, Integer.parseInt(productId));
-                User user = session.get(User.class, userId);
+                productId = Integer.parseInt(request.getParameter("productId"));
+                quantity = Integer.parseInt(request.getParameter("quantity"));
 
-                if (product == null || user == null) {
-                    sendErrorResponse(response, "Product or user not found", HttpServletResponse.SC_NOT_FOUND);
-                    return;
+                if (productId == null || quantity == null || quantity <= 0) {
+                    throw new IllegalArgumentException("Invalid product ID or quantity");
                 }
-
-                int requestedQuantity = Integer.parseInt(quantity);
-                if (requestedQuantity <= 0) {
-                    sendErrorResponse(response, "Invalid quantity", HttpServletResponse.SC_BAD_REQUEST);
-                    return;
-                }
-
-                // Check stock availability
-                if (product.getStock() < requestedQuantity) {
-                    sendErrorResponse(response, "Insufficient stock available", HttpServletResponse.SC_BAD_REQUEST);
-                    return;
-                }
-
-                // Check if product already in cart
-                Cart existingCart = session.createQuery(
-                                "FROM Cart c WHERE c.user.id = :userId AND c.product.id = :productId",
-                                Cart.class)
-                        .setParameter("userId", userId)
-                        .setParameter("productId", product.getId())
-                        .uniqueResult();
-
-                if (existingCart != null) {
-                    // Update quantity
-                    int newQuantity = existingCart.getQuantity() + requestedQuantity;
-                    if (newQuantity > product.getStock()) {
-                        sendErrorResponse(response, "Insufficient stock available", HttpServletResponse.SC_BAD_REQUEST);
-                        return;
-                    }
-                    existingCart.setQuantity(newQuantity);
-                    session.merge(existingCart);
-                } else {
-                    // Create new cart item
-                    Cart cart = new Cart();
-                    cart.setUser(user);
-                    cart.setProduct(product);
-                    cart.setQuantity(requestedQuantity);
-                    cart.setCreatedAt(LocalDateTime.now());
-                    session.persist(cart);
-                }
-
-                transaction.commit();
-
-                // Get updated cart count
-                Long cartCount = session.createQuery(
-                                "SELECT COUNT(c) FROM Cart c WHERE c.user.id = :userId",
-                                Long.class)
-                        .setParameter("userId", userId)
-                        .uniqueResult();
-
-                // Update session
-                httpSession.setAttribute("cartCount", cartCount.intValue());
-
-                JsonObject json = new JsonObject();
-                json.addProperty("success", true);
-                json.addProperty("message", "Product added to cart successfully");
-                json.addProperty("cartCount", cartCount);
-
-                response.setContentType("application/json");
-                response.getWriter().write(json.toString());
-
-            } catch (Exception e) {
-                if (transaction != null && transaction.isActive()) {
-                    transaction.rollback();
-                }
-                throw e;
+            } catch (NumberFormatException e) {
+                sendErrorResponse(response, "Invalid parameters");
+                return;
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            sendErrorResponse(response, "Error adding to cart: " + e.getMessage());
-        }
-    }
 
-    private void updateCartItem(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        HttpSession httpSession = request.getSession();
-        Integer userId = (Integer) httpSession.getAttribute("userId");
+            // Start database transaction
+            hibernateSession = FactoryConfiguration.getInstance().getSession();
+            transaction = hibernateSession.beginTransaction();
 
-        if (userId == null) {
-            sendErrorResponse(response, "User not logged in", HttpServletResponse.SC_UNAUTHORIZED);
-            return;
-        }
+            // Get product and validate stock
+            Product product = hibernateSession.get(Product.class, productId);
+            if (product == null) {
+                sendErrorResponse(response, "Product not found");
+                return;
+            }
 
-        String cartId = request.getParameter("cartId");
-        String quantity = request.getParameter("quantity");
+            if (product.getStock() < quantity) {
+                sendErrorResponse(response, "Not enough stock available");
+                return;
+            }
 
-        if (cartId == null || quantity == null) {
-            sendErrorResponse(response, "Missing required parameters", HttpServletResponse.SC_BAD_REQUEST);
-            return;
-        }
+            // Get or create cart item
+            Cart existingItem = hibernateSession.createQuery(
+                            "FROM Cart c WHERE c.user.id = :userId AND c.product.id = :productId",
+                            Cart.class)
+                    .setParameter("userId", userId)
+                    .setParameter("productId", productId)
+                    .uniqueResult();
 
-        try (Session session = FactoryConfiguration.getInstance().getSession()) {
-            Transaction transaction = session.beginTransaction();
-
-            try {
-                Cart cart = session.createQuery(
-                                "FROM Cart c WHERE c.id = :cartId AND c.user.id = :userId",
-                                Cart.class)
-                        .setParameter("cartId", Integer.parseInt(cartId))
-                        .setParameter("userId", userId)
-                        .uniqueResult();
-
-                if (cart == null) {
-                    sendErrorResponse(response, "Cart item not found", HttpServletResponse.SC_NOT_FOUND);
+            if (existingItem != null) {
+                // Update existing cart item
+                int newQuantity = existingItem.getQuantity() + quantity;
+                if (product.getStock() < newQuantity) {
+                    sendErrorResponse(response, "Not enough stock available for requested quantity");
                     return;
                 }
-
-                int newQuantity = Integer.parseInt(quantity);
-                if (newQuantity <= 0) {
-                    // Remove item if quantity is 0 or negative
-                    session.remove(cart);
-                } else {
-                    // Check stock availability
-                    if (cart.getProduct().getStock() < newQuantity) {
-                        sendErrorResponse(response, "Insufficient stock available", HttpServletResponse.SC_BAD_REQUEST);
-                        return;
-                    }
-                    cart.setQuantity(newQuantity);
-                    session.merge(cart);
-                }
-
-                transaction.commit();
-
-                JsonObject json = new JsonObject();
-                json.addProperty("success", true);
-                json.addProperty("message", newQuantity <= 0 ? "Item removed from cart" : "Cart updated successfully");
-
-                response.setContentType("application/json");
-                response.getWriter().write(json.toString());
-
-            } catch (Exception e) {
-                if (transaction != null && transaction.isActive()) {
-                    transaction.rollback();
-                }
-                throw e;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            sendErrorResponse(response, "Error updating cart: " + e.getMessage());
-        }
-    }
-
-    @Override
-    protected void doDelete(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        HttpSession httpSession = request.getSession();
-        Integer userId = (Integer) httpSession.getAttribute("userId");
-
-        if (userId == null) {
-            sendErrorResponse(response, "User not logged in", HttpServletResponse.SC_UNAUTHORIZED);
-            return;
-        }
-
-        String cartId = request.getParameter("id");
-        if (cartId == null) {
-            sendErrorResponse(response, "Missing cart item id", HttpServletResponse.SC_BAD_REQUEST);
-            return;
-        }
-
-        try (Session session = FactoryConfiguration.getInstance().getSession()) {
-            Transaction transaction = session.beginTransaction();
-
-            try {
-                Cart cart = session.createQuery(
-                                "FROM Cart c WHERE c.id = :cartId AND c.user.id = :userId",
-                                Cart.class)
-                        .setParameter("cartId", Integer.parseInt(cartId))
-                        .setParameter("userId", userId)
-                        .uniqueResult();
-
-                if (cart == null) {
-                    sendErrorResponse(response, "Cart item not found", HttpServletResponse.SC_NOT_FOUND);
+                existingItem.setQuantity(newQuantity);
+                hibernateSession.merge(existingItem);
+            } else {
+                // Create new cart item
+                Cart cartItem = new Cart();
+                User user = hibernateSession.get(User.class, userId);
+                if (user == null) {
+                    sendErrorResponse(response, "User not found");
                     return;
                 }
-
-                session.remove(cart);
-                transaction.commit();
-
-                // Get updated cart count
-                Long cartCount = session.createQuery(
-                                "SELECT COUNT(c) FROM Cart c WHERE c.user.id = :userId",
-                                Long.class)
-                        .setParameter("userId", userId)
-                        .uniqueResult();
-
-                // Update session
-                httpSession.setAttribute("cartCount", cartCount.intValue());
-
-                JsonObject json = new JsonObject();
-                json.addProperty("success", true);
-                json.addProperty("message", "Item removed from cart successfully");
-                json.addProperty("cartCount", cartCount);
-
-                response.setContentType("application/json");
-                response.getWriter().write(json.toString());
-
-            } catch (Exception e) {
-                if (transaction != null && transaction.isActive()) {
-                    transaction.rollback();
-                }
-                throw e;
+                cartItem.setUser(user);
+                cartItem.setProduct(product);
+                cartItem.setQuantity(quantity);
+                cartItem.setCreatedAt(LocalDateTime.now());
+                hibernateSession.persist(cartItem);
             }
+
+            // Commit transaction
+            transaction.commit();
+
+            // Update cart count in session
+            Long cartCount = hibernateSession.createQuery(
+                            "SELECT COALESCE(SUM(c.quantity), 0) FROM Cart c WHERE c.user.id = :userId",
+                            Long.class)
+                    .setParameter("userId", userId)
+                    .uniqueResult();
+
+            httpSession.setAttribute("cartCount", cartCount.intValue());
+
+            // Send success response
+            JsonObject json = new JsonObject();
+            json.addProperty("success", true);
+            json.addProperty("message", "Product added to cart successfully");
+            json.addProperty("cartCount", cartCount.intValue());
+
+            response.getWriter().write(json.toString());
+
         } catch (Exception e) {
+            // Log the error
             e.printStackTrace();
-            sendErrorResponse(response, "Error removing item from cart: " + e.getMessage());
+
+            // Rollback transaction if active
+            if (transaction != null && transaction.isActive()) {
+                try {
+                    transaction.rollback();
+                } catch (Exception rollbackException) {
+                    rollbackException.printStackTrace();
+                }
+            }
+
+            // Send error response
+            sendErrorResponse(response, "Failed to add product to cart: " + e.getMessage());
+        } finally {
+            // Clean up hibernate session
+            if (hibernateSession != null && hibernateSession.isOpen()) {
+                try {
+                    hibernateSession.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
@@ -381,14 +225,137 @@ public class CartServlet extends HttpServlet {
         sendErrorResponse(response, message, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
 
+    private void handleUpdateCart(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        HttpSession httpSession = request.getSession(false);
+        if (httpSession == null || httpSession.getAttribute("userId") == null) {
+            sendErrorResponse(response, "Please login to update cart",
+                    HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+
+        Integer userId = (Integer) httpSession.getAttribute("userId");
+        Integer cartId = Integer.parseInt(request.getParameter("cartId"));
+        Integer quantity = Integer.parseInt(request.getParameter("quantity"));
+
+        try (Session session = FactoryConfiguration.getInstance().getSession()) {
+            Transaction transaction = session.beginTransaction();
+
+            try {
+                Cart cartItem = session.get(Cart.class, cartId);
+                if (cartItem == null) {
+                    throw new Exception("Cart item not found");
+                }
+
+                if (!cartItem.getUser().getId().equals(userId)) {
+                    throw new Exception("Unauthorized access to cart item");
+                }
+
+                if (cartItem.getProduct().getStock() < quantity) {
+                    throw new Exception("Not enough stock available");
+                }
+
+                if (quantity <= 0) {
+                    session.remove(cartItem);
+                } else {
+                    cartItem.setQuantity(quantity);
+                    session.merge(cartItem);
+                }
+
+                transaction.commit();
+
+                // Update cart count after successful update
+                updateCartCount(httpSession, session, userId);
+
+                Integer updatedCount = (Integer) httpSession.getAttribute("cartCount");
+                JsonObject json = new JsonObject();
+                json.addProperty("success", true);
+                json.addProperty("message", "Cart updated successfully");
+                json.addProperty("cartCount", updatedCount);
+
+                response.setContentType("application/json");
+                response.getWriter().write(json.toString());
+
+            } catch (Exception e) {
+                if (transaction != null && transaction.isActive()) {
+                    transaction.rollback();
+                }
+                throw e;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            sendErrorResponse(response, e.getMessage());
+        }
+    }
+
+    private void handleRemoveFromCart(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        HttpSession httpSession = request.getSession(false);
+        if (httpSession == null || httpSession.getAttribute("userId") == null) {
+            sendErrorResponse(response, "Please login to remove items from cart",
+                    HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+
+        Integer userId = (Integer) httpSession.getAttribute("userId");
+        Integer cartId = Integer.parseInt(request.getParameter("cartId"));
+
+        try (Session session = FactoryConfiguration.getInstance().getSession()) {
+            Transaction transaction = session.beginTransaction();
+
+            try {
+                Cart cartItem = session.get(Cart.class, cartId);
+                if (cartItem == null) {
+                    throw new Exception("Cart item not found");
+                }
+
+                if (!cartItem.getUser().getId().equals(userId)) {
+                    throw new Exception("Unauthorized access to cart item");
+                }
+
+                session.remove(cartItem);
+                transaction.commit();
+
+                // Update cart count after successful removal
+                updateCartCount(httpSession, session, userId);
+
+                Integer updatedCount = (Integer) httpSession.getAttribute("cartCount");
+                JsonObject json = new JsonObject();
+                json.addProperty("success", true);
+                json.addProperty("message", "Item removed from cart successfully");
+                json.addProperty("cartCount", updatedCount);
+
+                response.setContentType("application/json");
+                response.getWriter().write(json.toString());
+
+            } catch (Exception e) {
+                if (transaction != null && transaction.isActive()) {
+                    transaction.rollback();
+                }
+                throw e;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            sendErrorResponse(response, e.getMessage());
+        }
+    }
     private void sendErrorResponse(HttpServletResponse response, String message, int statusCode)
             throws IOException {
+        System.err.println("Sending error response: " + message); // Debug log
+
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.setStatus(statusCode);
+
         JsonObject json = new JsonObject();
         json.addProperty("success", false);
         json.addProperty("message", message);
 
-        response.setContentType("application/json");
-        response.setStatus(statusCode);
-        response.getWriter().write(json.toString());
+        String jsonResponse = json.toString();
+        System.err.println("Error response JSON: " + jsonResponse); // Debug log
+
+        response.getWriter().write(jsonResponse);
+        response.getWriter().flush();
     }
+
 }

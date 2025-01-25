@@ -1,0 +1,57 @@
+body {
+    background-color: #ffffff;
+    color: #000000;
+    font-family: 'Inter', sans-serif;
+}
+
+.testimonial-card {
+    transition: transform 0.3s ease;
+    border-radius: 20px;
+    overflow: hidden;
+    padding: 20rem;
+}
+
+.testimonial-card:hover {
+    transform: translateY(-5px);
+}
+
+.company-logo {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.badge {
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+blockquote {
+    position: relative;
+    font-family: 'Inter', sans-serif;
+}
+
+.rating {
+    font-size: 1.25rem;
+}
+
+.stats-number {
+    font-size: 3rem;
+    font-weight: 700;
+    background: linear-gradient(90deg, #FFB6C1, #FFA500);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.company-ratings {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    padding: 2rem;
+    transition: all 0.3s ease;
+}
+
+.company-ratings:hover {
+    background: rgba(255, 255, 255, 0.08);
+}

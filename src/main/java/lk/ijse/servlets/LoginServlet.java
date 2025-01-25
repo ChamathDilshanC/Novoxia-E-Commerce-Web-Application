@@ -32,7 +32,6 @@ public class LoginServlet extends HttpServlet {
             String password = req.getParameter("password");
             String rememberMe = req.getParameter("rememberMe");
 
-            // Basic validation
             if (username == null || password == null || username.trim().isEmpty() || password.trim().isEmpty()) {
                 jsonResponse.addProperty("status", "error");
                 jsonResponse.addProperty("message", "Username and password are required");
@@ -51,7 +50,7 @@ public class LoginServlet extends HttpServlet {
 
             if (user != null && PasswordEncoder.verify(password, user.getPassword())) {
 
-                HttpSession httpSession = req.getSession(true); // Create new session if none exists
+                HttpSession httpSession = req.getSession(true);
                 httpSession.setAttribute("userId", user.getId());
                 httpSession.setAttribute("username", user.getUsername());
                 httpSession.setAttribute("role", user.getRole());
@@ -59,11 +58,10 @@ public class LoginServlet extends HttpServlet {
                 httpSession.setAttribute("lastName", user.getLastName());
                 httpSession.setAttribute("email", user.getEmail());
 
-                // Set session timeout
                 if (rememberMe != null && rememberMe.equals("on")) {
-                    httpSession.setMaxInactiveInterval(7 * 24 * 60 * 60); // 7 days
+                    httpSession.setMaxInactiveInterval(7 * 24 * 60 * 60);
                 } else {
-                    httpSession.setMaxInactiveInterval(30 * 60); // 30 minutes
+                    httpSession.setMaxInactiveInterval(30 * 60);
                 }
 
                 jsonResponse.addProperty("status", "success");

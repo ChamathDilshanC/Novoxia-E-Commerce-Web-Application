@@ -24,31 +24,26 @@ public class ResetPasswordServlet extends HttpServlet {
         Session session = FactoryConfiguration.getInstance().getSession();
         Transaction transaction = null;
 
-        // Set response type to JSON
         resp.setContentType("application/json");
         PrintWriter out = resp.getWriter();
         JsonObject jsonResponse = new JsonObject();
 
         try {
-            // Get form data
             String username = validateInput(req.getParameter("username"), "Username");
             String email = validateInput(req.getParameter("email"), "Email");
             String newPassword = validateInput(req.getParameter("newPassword"), "New Password");
             String confirmPassword = validateInput(req.getParameter("confirmPassword"), "Confirm Password");
 
-            // Validate password match
             if (!newPassword.equals(confirmPassword)) {
                 sendErrorResponse(out, "Passwords do not match!");
                 return;
             }
 
-            // Validate password strength
             if (!isValidPassword(newPassword)) {
                 sendErrorResponse(out, "Password must be at least 8 characters and include letters, numbers, and special characters!");
                 return;
             }
 
-            // Find user by username and email
             Query<User> query = session.createQuery(
                     "FROM User WHERE username = :username AND email = :email", User.class);
             query.setParameter("username", username);
@@ -60,13 +55,12 @@ public class ResetPasswordServlet extends HttpServlet {
                 return;
             }
 
-            // Start transaction and update password
             transaction = session.beginTransaction();
             user.setPassword(PasswordEncoder.encode(newPassword));
-            session.merge(user);  // Using merge instead of update for better compatibility
+            session.merge(user);
             transaction.commit();
 
-            // Send success response
+
             jsonResponse.addProperty("status", "success");
             jsonResponse.addProperty("message", "Password reset successful!");
             out.print(jsonResponse.toString());

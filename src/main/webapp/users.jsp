@@ -18,11 +18,31 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="styles/userStyles.css">
 </head>
+<style>
+  .header-section {
+    background: linear-gradient(135deg, #00a8ff 0%, #ffffff 100%);
+    color: white;
+    padding: 2rem 5rem 2rem 5rem;
+    margin-top: 1rem;
+    margin-bottom: 2rem;
+    border-radius: 15px;
+  }
+</style>
 <body>
 
 <!-- Top Navigation -->
 <jsp:include page="components/topnav.jsp" />
 
+<div class="header-section">
+  <div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h1 class="m-0 mb-2">Users</h1>
+        <p class="m-0 text-white-50">Welcome User Wish You A Happy Day ❤️🫰</p>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="dashboard-container">
   <!-- Stats Cards -->
   <div class="stats-grid">

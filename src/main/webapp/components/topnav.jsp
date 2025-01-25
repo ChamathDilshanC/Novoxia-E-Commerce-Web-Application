@@ -99,18 +99,32 @@
     .cart-btn a {
         color: inherit;
         text-decoration: none;
+        position: relative;
+        display: inline-block;
     }
 
     .cart-badge {
         position: absolute;
-        top: 0;
-        right: 0;
+        top: -8px;
+        right: -8px;
         background-color: #ef4444;
         color: white;
-        font-size: 0.75rem;
-        padding: 0.125rem 0.375rem;
+        font-size: 0.7rem;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 5px;
         border-radius: 9999px;
-        transform: translate(25%, -25%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 500;
+        box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+        animation: cartBadgePopIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes cartBadgePopIn {
+        0% { transform: scale(0); }
+        100% { transform: scale(1); }
     }
 
     /* Dropdown Styles */
@@ -184,15 +198,17 @@
             <div>
                 <a href="${pageContext.request.contextPath}/<%= "ADMIN".equals(role) ? "dashboard.jsp" : "dashboard.jsp" %>"
                    class="text-decoration-none">
+                <div style="display: flex; gap: 20px">
                     <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
                         <img src="${pageContext.request.contextPath}/assets/a.svg" alt="logo" width="32" height="32">
                     </svg>
                     <span class="nav-logo">Novoxia</span>
+                </div>
                 </a>
             </div>
 
             <!-- Navigation Links -->
-            <div class="d-flex gap-3">
+            <div class="d-flex gap-3 container">
                 <% if ("ADMIN".equals(role)) { %>
                 <a href="${pageContext.request.contextPath}/dashboard.jsp"
                    class="nav-link <%= currentPage.contains("/dashboard.jsp") ? "active" : "" %>">
@@ -206,8 +222,8 @@
                    class="nav-link <%= currentPage.contains("/categories") ? "active" : "" %>">
                     <i class="bi bi-grid me-1"></i>Categories
                 </a>
-                <a href="${pageContext.request.contextPath}/view/orders.jsp"
-                   class="nav-link <%= currentPage.contains("/orders.jsp") ? "active" : "" %>">
+                <a href="${pageContext.request.contextPath}/orders"
+                   class="nav-link <%= currentPage.contains("/orders") ? "active" : "" %>">
                     <i class="bi bi-cart-check me-1"></i>Orders
                 </a>
                 <a href="${pageContext.request.contextPath}/user"
@@ -223,8 +239,8 @@
                    class="nav-link <%= currentPage.contains("/products") ? "active" : "" %>">
                     <i class="bi bi-box-seam me-1"></i>Products
                 </a>
-                <a href="${pageContext.request.contextPath}/view/orders.jsp"
-                   class="nav-link <%= currentPage.contains("/orders.jsp") ? "active" : "" %>">
+                <a href="${pageContext.request.contextPath}/orders"
+                   class="nav-link <%= currentPage.contains("/orders") ? "active" : "" %>">
                     <i class="bi bi-clock-history me-1"></i>My Orders
                 </a>
                 <% } %>
@@ -234,21 +250,23 @@
         <!-- Right Side Items -->
         <div class="d-flex align-items-center gap-3">
             <% if (!"ADMIN".equals(role)) { %>
-            <!-- Cart Button - Only show for customers -->
-            <button class="cart-btn" title="Cart">
-                <a href="${pageContext.request.contextPath}/view/cart.jsp">
+            <!-- Cart Button -->
+            <button class="cart-btn" title="Shopping Cart">
+                <a href="${pageContext.request.contextPath}/cart" class="position-relative">
                     <i class="bi bi-cart fs-5"></i>
                     <% if (cartCount != null && cartCount > 0) { %>
-                    <span class="cart-badge"><%= cartCount %></span>
+                    <span class="cart-badge" id="cartCountBadge"><%= cartCount %></span>
                     <% } %>
                 </a>
             </button>
             <% } %>
 
             <!-- User Profile Dropdown -->
+            <!-- User Profile Dropdown -->
             <div class="dropdown">
                 <div class="user-profile d-flex align-items-center gap-2"
                      data-bs-toggle="dropdown"
+                     data-user-role="<%= role %>"
                      aria-expanded="false">
                     <div class="user-avatar">
                         <%= firstName != null ? firstName.charAt(0) : "U" %>
@@ -273,7 +291,7 @@
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="${pageContext.request.contextPath}/view/orders.jsp">
+                        <a class="dropdown-item" href="${pageContext.request.contextPath}/orders">
                             <i class="bi bi-clock-history me-2"></i>Order History
                         </a>
                     </li>
@@ -291,9 +309,10 @@
         </div>
     </div>
 </nav>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    // Active link highlight (existing code remains same)
+    // Active link highlight
     const currentPage = window.location.pathname.split('/').pop();
     document.querySelectorAll('.nav-link').forEach(link => {
         if (link.getAttribute('href').includes(currentPage)) {
@@ -303,7 +322,36 @@
         }
     });
 
-    // SweetAlert Logout confirmation
+    // Cart count update function
+    function updateCartCount(count) {
+        const cartBtn = document.querySelector('.cart-btn a');
+        if (!cartBtn) return;
+
+        let badge = document.querySelector('#cartCountBadge');
+
+        if (count > 0) {
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.id = 'cartCountBadge';
+                badge.className = 'cart-badge';
+                cartBtn.appendChild(badge);
+            }
+            badge.textContent = count;
+        } else {
+            if (badge) {
+                badge.remove();
+            }
+        }
+    }
+
+    // Listen for cart updates
+    window.addEventListener('cartUpdate', function(e) {
+        if (e.detail && typeof e.detail.count !== 'undefined') {
+            updateCartCount(e.detail.count);
+        }
+    });
+
+    // Logout confirmation
     document.getElementById('logoutForm')?.addEventListener('submit', function(e) {
         e.preventDefault();
         const form = e.target;

@@ -5,6 +5,7 @@ import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
 import lk.ijse.config.FactoryConfiguration;
+import lk.ijse.entity.Product;
 import lk.ijse.entity.User;
 import lk.ijse.util.PasswordEncoder;
 import org.apache.commons.dbcp2.BasicDataSource;
@@ -12,6 +13,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 
@@ -50,7 +52,7 @@ public class DBListener implements ServletContextListener {
             // Initialize Hibernate
             FactoryConfiguration.initialize(basicDataSource);
 
-            // Test the connection and create admin if needed
+            // Test the connection and create admin & products if needed
             Session testSession = null;
             Transaction transaction = null;
             try {
@@ -58,13 +60,20 @@ public class DBListener implements ServletContextListener {
                 transaction = testSession.beginTransaction();
 
                 // Check if any users exist
-                Query<Long> query = testSession.createQuery(
+                Query<Long> userQuery = testSession.createQuery(
                         "SELECT COUNT(u) FROM User u",
                         Long.class
                 );
-                Long userCount = query.uniqueResult();
+                Long userCount = userQuery.uniqueResult();
 
-                // If no users exist, create admin user
+                // Check if any products exist
+                Query<Long> productQuery = testSession.createQuery(
+                        "SELECT COUNT(p) FROM Product p",
+                        Long.class
+                );
+                Long productCount = productQuery.uniqueResult();
+
+                // Create admin user if no users exist
                 if (userCount == 0) {
                     System.out.println("No users found. Creating admin user...");
 
@@ -79,6 +88,21 @@ public class DBListener implements ServletContextListener {
 
                     testSession.persist(adminUser);
                     System.out.println("Admin user created successfully");
+                }
+
+                // Create sample products if no products exist
+                if (productCount == 0) {
+                    System.out.println("No products found. Creating products...");
+
+                    Product product1 = new Product();
+                    product1.setName("Product 1");
+                    product1.setPrice(BigDecimal.valueOf(1000.0));
+                    product1.setStock(10);
+                    product1.setCreatedAt(LocalDateTime.now());
+
+
+                    testSession.persist(product1);
+                    System.out.println("Products created successfully");
                 }
 
                 transaction.commit();

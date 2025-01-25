@@ -76,7 +76,6 @@ public class UserServlet extends HttpServlet {
             String lastName = req.getParameter("lastName");
             String role = req.getParameter("role");
 
-            // Check if username or email already exists
             session = FactoryConfiguration.getInstance().getSession();
             Query<User> query = session.createQuery(
                     "FROM User WHERE username = :username OR email = :email",
@@ -139,7 +138,6 @@ public class UserServlet extends HttpServlet {
 
             session = FactoryConfiguration.getInstance().getSession();
 
-            // Check if username or email already exists for other users
             Query<User> query = session.createQuery(
                     "FROM User WHERE (username = :username OR email = :email) AND id != :userId",
                     User.class
@@ -210,7 +208,6 @@ public class UserServlet extends HttpServlet {
                 return;
             }
 
-            // Check if user is trying to delete their own account
             Long currentUserId = (Long) req.getSession().getAttribute("userId");
             if (currentUserId != null && currentUserId.equals(userId)) {
                 resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -218,7 +215,6 @@ public class UserServlet extends HttpServlet {
                 return;
             }
 
-            // First, delete any related records
             Query<?> deleteOrderDetailsQuery = session.createQuery(
                     "DELETE FROM OrderDetail od WHERE od.order.user.id = :userId"
             );
@@ -237,7 +233,6 @@ public class UserServlet extends HttpServlet {
             deleteCartQuery.setParameter("userId", userId);
             deleteCartQuery.executeUpdate();
 
-            // Finally, delete the user
             session.remove(user);
             transaction.commit();
 
