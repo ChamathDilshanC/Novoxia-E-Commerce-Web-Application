@@ -16,6 +16,11 @@ The platform provides comprehensive tools for administrators to manage the entir
 - Order Management: Track and manage customer orders with status updates
 - User Management: Control customer accounts and access levels
 
+
+![Screenshot 2025-02-02 174428](https://github.com/user-attachments/assets/fa9cec10-5749-4420-a37e-37b9700df414)
+![Screenshot 2025-02-02 174451](https://github.com/user-attachments/assets/615cd232-0c4f-4b5c-8ae5-76c534670ec6)
+![Screenshot 2025-02-02 174510](https://github.com/user-attachments/assets/70285e67-1d91-4cac-b434-b00d167da03f)
+
 ### Customer Features
 Customers enjoy a smooth, intuitive shopping experience with:
 
