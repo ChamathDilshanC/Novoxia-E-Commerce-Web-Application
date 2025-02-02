@@ -1,8 +1,8 @@
 # 🛍️ Novoxia E-Commerce Platform
 
-[![Watch the video](https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/XgEDiRGkxNQ)
+[![Watch the video](https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](your-youtube-link-here)
 
-[Watch Full Platform Demo on YouTube 🎥](your-youtube-link-here)
+[Watch Full Platform Demo on YouTube 🎥](https://youtu.be/XgEDiRGkxNQ)
 
 A modern, full-featured e-commerce web application built with JavaEE and modern web technologies. This platform offers a seamless shopping experience with robust admin capabilities for effective product and order management.
 
@@ -90,16 +90,13 @@ mvn clean install
 cp target/e-commerce-platform.war /path/to/tomcat/webapps/
 ```
 
-5. Access the Application:
-After successful deployment, access the application at:
-```
-http://localhost:8080/E_Commerce/
-```
+5. Configure Tomcat URL:
+```properties
+# Update server.xml in Tomcat configuration to set the context path
+<Context path="/E_Commerce" docBase="e-commerce-platform" />
 
-Default admin credentials:
-```
-Username: admin
-Password: Admin@123
+# Access the application at
+http://localhost:8080/E_Commerce/
 ```
 
 ## 🎯 Project Structure
