@@ -1,6 +1,6 @@
 # 🛍️ Novoxia E-Commerce Platform
 
-[![Watch the video](https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](your-youtube-link-here)
+[![Watch the video](https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/XgEDiRGkxNQ)
 
 [Watch Full Platform Demo on YouTube 🎥](your-youtube-link-here)
 
